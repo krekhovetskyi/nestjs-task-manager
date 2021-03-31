@@ -32,14 +32,14 @@ export class TasksService {
     return tasks;
   }
 
-  getTaskById(id: string): Task[] {
-    const task = this._tasks.filter((t: Task) => t.id === id);
+  getTaskById(id: string): Task {
+    const task = this._tasks.find((task: Task) => task.id === id);
 
-    if (task) {
-      return task;
-    } else {
+    if (!task) {
       throw new NotFoundException();
     }
+
+    return task;
   }
 
   createTask(createTaskDto: CreateTaskDto): Task {
@@ -57,25 +57,21 @@ export class TasksService {
     return task;
   }
 
-  deleteTask(id: string): Task {
-    const task = this._tasks.find((t: Task) => t.id === id);
+  updateTaskStatus(id: string, status: TaskStatus): Task {
+    const task = this.getTaskById(id);
 
-    if (task) {
-      this._tasks = this._tasks.filter((t: Task) => t.id !== id);
-      return task;
-    } else {
-      throw new NotFoundException();
-    }
+    task.status = status;
+    return task;
   }
 
-  updateTaskStatus(id: string, status: TaskStatus): Task {
-    const task = this._tasks.find((t: Task) => t.id === id);
+  deleteTask(id: string): Task {
+    const task = this.getTaskById(id);
 
-    if (task) {
-      task.status = status;
-      return task;
-    } else {
+    if (!task) {
       throw new NotFoundException();
     }
+
+    this._tasks = this._tasks.filter((t: Task) => t.id !== id);
+    return task;
   }
 }
