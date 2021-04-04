@@ -2,7 +2,7 @@ version: "3.5"
 
 services:
   postgres:
-    container_name: postgres_task_manager
+    container_name: postgres
     image: postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -18,7 +18,7 @@ services:
     restart: unless-stopped
 
   pgadmin:
-    container_name: pgadmin_container
+    container_name: pgadmin
     image: dpage/pgadmin4
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
@@ -32,6 +32,72 @@ services:
     networks:
       - postgres
     restart: unless-stopped
+
+  minio1:
+    container_name: minio_1
+    image: minio/minio
+    volumes:
+      - ./s3/data1-1:/data1
+      - ./s3/data1-2:/data2
+    ports:
+      - '9000:9000'
+    environment:
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+    command: server http://minio{1...4}/data{1...2}
+    healthcheck:
+      test: [ 'CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live' ]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  minio2:
+    container_name: minio_2
+    image: minio/minio
+    volumes:
+      - ./s3/data2-1:/data1
+      - ./s3/data2-2:/data2
+    environment:
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+    command: server http://minio{1...4}/data{1...2}
+    healthcheck:
+      test: [ 'CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live' ]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  minio3:
+    container_name: minio_3
+    image: minio/minio
+    volumes:
+      - ./s3/data3-1:/data1
+      - ./s3/data3-2:/data2
+    environment:
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+    command: server http://minio{1...4}/data{1...2}
+    healthcheck:
+      test: [ 'CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live' ]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  minio4:
+    container_name: minio_4
+    image: minio/minio
+    volumes:
+      - ./s3/data4-1:/data1
+      - ./s3/data4-2:/data2
+    environment:
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+    command: server http://minio{1...4}/data{1...2}
+    healthcheck:
+      test: [ 'CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live' ]
+      interval: 30s
+      timeout: 20s
+      retries: 3
 
 networks:
   postgres:
