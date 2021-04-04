@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { User } from '../auth/user.entity';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { GetTaskFilterDto } from './dto/get-task-filter.dto';
 import { TaskStatus } from './task-status.enum';
@@ -13,12 +14,12 @@ export class TasksService {
   constructor(@InjectRepository(TaskRepository) private _taskRepository: TaskRepository) {
   }
 
-  async getAllTasks(filterDto: GetTaskFilterDto): Promise<Task[]> {
-    return this._taskRepository.getTasks(filterDto);
+  async getAllTasks(filterDto: GetTaskFilterDto, user: User): Promise<Task[]> {
+    return this._taskRepository.getTasks(filterDto, user);
   }
 
-  async getTaskById(id: number): Promise<Task> {
-    const task = await this._taskRepository.findOne(id);
+  async getTaskById(id: number, user: User): Promise<Task> {
+    const task = await this._taskRepository.findOne({where: {id, userId: user.id}});
 
     if (!task) {
       throw new NotFoundException();
@@ -27,12 +28,12 @@ export class TasksService {
     return task;
   }
 
-  async createTask(createTaskDto: CreateTaskDto): Promise<Task> {
-    return this._taskRepository.createTask(createTaskDto);
+  async createTask(createTaskDto: CreateTaskDto, user: User): Promise<Task> {
+    return this._taskRepository.createTask(createTaskDto, user);
   }
 
-  async updateTaskStatus(id: number, status: TaskStatus): Promise<Task> {
-    const task = await this.getTaskById(id);
+  async updateTaskStatus(id: number, status: TaskStatus, user: User): Promise<Task> {
+    const task = await this.getTaskById(id, user);
 
     task.status = status;
     await task.save();
@@ -40,9 +41,11 @@ export class TasksService {
     return task;
   }
 
-  async deleteTask(id: number): Promise<Task> {
-    const task = await this.getTaskById(id);
+  async deleteTask(id: number, user: User): Promise<void> {
+    const result = await this._taskRepository.delete({id, userId: user.id});
 
-    return task.remove();
+    if (result.affected === 0) {
+      throw  new NotFoundException();
+    }
   }
 }
